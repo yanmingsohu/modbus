@@ -3,9 +3,9 @@ package modbus
 import (
 	"fmt"
 	"net"
-	"time"
 	"strings"
 	"sync"
+	"time"
 )
 
 type RegType	uint
@@ -115,6 +115,26 @@ func NewClient(conf *ClientConfiguration) (mc *ModbusClient, err error) {
 	mc.logger	= newLogger(fmt.Sprintf("modbus-client(%s)", mc.conf.URL))
 
 	return
+}
+
+// Bind to socket connection instead of creating new connection
+// t : {RTU_OVER_TCP_TRANSPORT | TCP_TRANSPORT}
+func (mc *ModbusClient) Bind(sock net.Conn, t transportType) (error) {
+	mc.lock.Lock()
+	defer mc.lock.Unlock()
+	
+	switch t {
+	case RTU_OVER_TCP_TRANSPORT:
+		mc.transport = newRTUTransport(
+			sock, mc.conf.URL, mc.conf.Speed, mc.conf.Timeout)
+
+	case TCP_TRANSPORT:
+		mc.transport = newTCPTransport(sock, mc.conf.Timeout)
+
+	default:
+		return ErrConfigurationError
+	}
+	return nil
 }
 
 // Opens the underlying transport (tcp socket or serial line).
