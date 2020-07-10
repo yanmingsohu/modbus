@@ -118,12 +118,11 @@ func NewClient(conf *ClientConfiguration) (mc *ModbusClient, err error) {
 }
 
 // Bind to socket connection instead of creating new connection
-// t : {RTU_OVER_TCP_TRANSPORT | TCP_TRANSPORT}
-func (mc *ModbusClient) Bind(sock net.Conn, t transportType) (error) {
+func (mc *ModbusClient) Bind(sock net.Conn) (error) {
 	mc.lock.Lock()
 	defer mc.lock.Unlock()
 	
-	switch t {
+	switch mc.transportType {
 	case RTU_OVER_TCP_TRANSPORT:
 		mc.transport = newRTUTransport(
 			sock, mc.conf.URL, mc.conf.Speed, mc.conf.Timeout)
